@@ -18,3 +18,24 @@ Result: No CRITICAL vulnerabilities found.
 Accepted Findings: None
 
 
+
+
+Secret Manager stores secrets.
+
+Cloud Run runtime service account receives:
+
+roles/secretmanager.secretAccessor
+
+Cloud Run references Secret Manager at runtime.
+
+
+Terraform State Strategy
+Remote Backend: GCS Bucket
+
+Environment Separation: Separate state prefixes
+
+dev/state.tfstate prod/state.tfstate
+
+Locking: Terraform state locking via GCS generation checks.
+
+Change Control: PR review → Terraform Plan → Approval → Apply.
