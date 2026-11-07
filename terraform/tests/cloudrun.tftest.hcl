@@ -1,7 +1,7 @@
 run "service_name_test" {
 
   assert {
-    condition = module.cloudrun.service_name != ""
+    condition     = module.cloudrun.service_name != ""
     error_message = "Service name should not be empty"
   }
 }
@@ -9,7 +9,7 @@ run "service_name_test" {
 run "environment_test" {
 
   assert {
-    condition = var.max_instances > 0
+    condition     = var.max_instances > 0
     error_message = "Max instances must be greater than zero"
   }
 }
