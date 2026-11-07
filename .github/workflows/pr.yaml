@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   validate:
@@ -16,43 +17,45 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      # 1. Application Tests & Build (Adjust for Go/Java as needed)
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          distribution: temurin
-          java-version: 21
+          go-version: '1.22'
 
-      - name: Run Unit Tests
-        run: mvn test
+      - name: Run Application Unit Tests
+        run: go test -v ./...
 
-      - name: Build Jar
-        run: mvn clean package -DskipTests
-
+      # 2. Terraform Security & Validation
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
+        working-directory: terraform
 
-      - name: Terraform Init
-        run: terraform init
-        working-directory: terraform/envs/dev
+      - name: Terraform Init (Dev Backend)
+        run: terraform init "-backend-config=environments/dev/backend.tfbackend" -reconfigure
+        working-directory: terraform
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: terraform/envs/dev
+        working-directory: terraform
 
-      - name: Terraform Test
+      - name: Native Terraform Tests
         run: terraform test
         working-directory: terraform
 
-      - name: Docker Build
+      # 3. Container Security & Local Image Build
+      - name: Build Local Container Image
         run: docker build -t app:${{ github.sha }} .
 
-      - name: Trivy Scan
-        uses: aquasecurity/trivy-action@master
+      - name: Trivy Container Vulnerability Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: app:${{ github.sha }}
-          format: table
-          severity: CRITICAL,HIGH
-          exit-code: 0
+          image-ref: 'app:${{ github.sha }}'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
