@@ -23,3 +23,8 @@ trivy image sample-service:v1
 trivy image sample-service:v1 > trivy-report.txt
 
 
+
+terraform fmt -recursive
+terraform validate
+terraform test
+PASS

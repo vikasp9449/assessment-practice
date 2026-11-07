@@ -1,0 +1,58 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Run Unit Tests
+        run: mvn test
+
+      - name: Build Jar
+        run: mvn clean package -DskipTests
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform/envs/dev
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: terraform/envs/dev
+
+      - name: Terraform Test
+        run: terraform test
+        working-directory: terraform
+
+      - name: Docker Build
+        run: docker build -t app:${{ github.sha }} .
+
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: app:${{ github.sha }}
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH
