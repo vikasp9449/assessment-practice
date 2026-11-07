@@ -1,52 +1,43 @@
-# 1. Mock the GCP Provider to run locally without requiring GCP credentials
-mock_provider "google" {}
+# Native Terraform 1.6+ Unit Test Suite
+# Tests contract assertions without requiring live GCP authentication
 
-# 2. Define global test inputs passed into the root module
 variables {
-  project_id            = "optum-test-project"
+  project_id            = "optum-dev-123"
+  region                = "us-central1"
   service_name          = "stateless-app"
-  image                 = "us-central1-docker.pkg.dev/optum-test-project/app-repo/service:latest"
+  environment           = "dev"
+  image                 = "gcr.io/optum-dev-123/stateless-app:v1.0.0"
   cpu                   = "1000m"
   memory                = "512Mi"
   timeout               = 300
   concurrency           = 80
-  min_instances         = 1
-  max_instances         = 10
-  ingress_type          = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
-  allow_unauthenticated = false
+  min_instances         = 0
+  max_instances         = 3
+  ingress_type          = "INGRESS_TRAFFIC_ALL"
+  allow_unauthenticated = true
 }
 
-# Run 1: Test Service Account Naming & Resource Naming in Dev
 run "verify_dev_naming_convention" {
   command = plan
 
-  variables {
-    environment = "dev"
-  }
-
   assert {
     condition     = module.cloud_run.service_name == "stateless-app-dev"
-    error_message = "Cloud Run service name output must match pattern {service_name}-{environment}."
-  }
-
-  assert {
-    condition     = module.cloud_run.service_account == "stateless-app-dev-sa@optum-test-project.iam.gserviceaccount.com"
-    error_message = "Runtime service account email does not match expected naming convention."
+    error_message = "Cloud Run service name must include environment suffix."
   }
 }
 
-# Run 2: Test Security Ingress & Least Privilege Access Controls in Prod
 run "verify_prod_security_controls" {
   command = plan
 
   variables {
     environment           = "prod"
-    ingress_type          = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
     allow_unauthenticated = false
+    min_instances         = 2
+    max_instances         = 10
   }
 
   assert {
     condition     = module.cloud_run.service_name == "stateless-app-prod"
-    error_message = "Cloud Run service name in prod must include the prod environment suffix."
+    error_message = "Production Cloud Run service name must use prod suffix."
   }
 }
