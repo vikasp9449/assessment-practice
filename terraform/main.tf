@@ -15,7 +15,7 @@ provider "google" {
 }
 
 module "cloud_run" {
-  source = "./modules/cloudrun"  # Updated to match folder name 'cloudrun'
+  source = "./modules/cloudrun" # Updated to match folder name 'cloudrun'
 
   project_id            = var.project_id
   region                = var.region
