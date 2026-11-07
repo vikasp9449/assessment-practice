@@ -68,3 +68,26 @@ Cloud Run revision rollback
 Concurrency:
 
 Single production deployment at a time
+
+
+
+## Actual OIDC Setup
+gcloud iam workload-identity-pools create github-pool \
+  --location=global
+
+gcloud iam workload-identity-pools providers create-oidc github-provider \
+  --location=global \
+  --workload-identity-pool=github-pool \
+  --issuer-uri=https://token.actions.githubusercontent.com
+
+gcloud iam service-accounts create github-deployer
+
+gcloud iam service-accounts add-iam-policy-binding \
+github-deployer@PROJECT_ID.iam.gserviceaccount.com \
+--role=roles/iam.workloadIdentityUser \
+--member="principalSet://iam.googleapis.com/..."
+
+
+Terraform init:
+terraform init "-backend-config=environments/dev/backend.tfbackend" -reconfigure
+
