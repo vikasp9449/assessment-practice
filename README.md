@@ -39,3 +39,32 @@ dev/state.tfstate prod/state.tfstate
 Locking: Terraform state locking via GCS generation checks.
 
 Change Control: PR review → Terraform Plan → Approval → Apply.
+
+
+
+
+CI/CD
+Pull Request:
+
+Unit tests
+Terraform validation
+Terraform tests
+Docker build
+Trivy scan
+Main Branch:
+
+Build immutable image
+Terraform plan
+Manual approval
+Terraform apply
+Cloud Run deployment
+Authentication:
+
+GitHub OIDC
+Workload Identity Federation
+Rollback:
+
+Cloud Run revision rollback
+Concurrency:
+
+Single production deployment at a time

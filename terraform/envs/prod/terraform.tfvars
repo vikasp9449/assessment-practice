@@ -2,9 +2,9 @@ module "cloudrun" {
 
   source = "../../modules/cloud-run"
 
-  project_id  = "sample-prod"
+  project_id = "sample-prod"
 
-  region      = "us-central1"
+  region = "us-central1"
 
   service_name = "demo-app"
 
